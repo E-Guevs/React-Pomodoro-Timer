@@ -3,7 +3,12 @@ import Timer from "./components/Timer";
 import Session from "./components/Session";
 import Break from "./components/Break";
 import { initialState } from "./initialState";
-import electricAlarmBeep from "./Electric-Alarm-Beep.mp3"; 
+import addButtonEffects from "./functions/addButtonEffects";
+import electricAlarmBeep from "./Electric-Alarm-Beep.mp3";
+
+let currentActivityCount = 0,
+  newActivityCount = 0,
+  percentTimeLeft;
 
 export default class PomodoroTimer extends Component {
   constructor(props) {
@@ -17,32 +22,70 @@ export default class PomodoroTimer extends Component {
     this.reset = this.reset.bind(this);
   }
 
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: COMPONENT DID MOUNT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
   componentDidMount() {
-    let initialTouchY;
+    function preventDefaultTouchAction(e) {
+      e.preventDefault();
+    }
+    document.addEventListener("touchstart", preventDefaultTouchAction, {
+      passive: false,
+    });
+    document.addEventListener("load", addButtonEffects("button"));
 
-    document.addEventListener(
-      "touchstart",
-      (e) => {
-        e.preventDefault();
-        initialTouchY = e.changedTouches[0].clientY;
-      },
-      { passive: false }
-    );
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible")
+        percentTimeLeft = this.state.timeLeft / this.state.duration;
 
-    document.addEventListener(
-      "touchmove",
-      (e) => {
-        let updatedTouchY = e.changedTouches[0].clientY;
-        let scrollDistance = initialTouchY - updatedTouchY;
-        window.scrollBy(0, scrollDistance);
-        initialTouchY = updatedTouchY;
-      },
-      { passive: false }
-    );
+      if (
+        document.visibilityState === "visible" &&
+        currentActivityCount !== newActivityCount &&
+        this.state.timerRunning === true
+      ) {
+        this.setState({
+          duration: this.state.timeLeft,
+          animation: `throttledProgress ${this.state.duration}s linear forwards`,
+        });
+
+        setTimeout(() => {
+          this.setState({
+            animation:
+              this.state.onSession === true
+                ? percentTimeLeft <= 0.66
+                  ? `sessionProgress ${
+                      this.state.duration * (29 / 30)
+                    }s cubic-bezier(0, ${1 - percentTimeLeft}, 0, ${
+                      1 - percentTimeLeft
+                    }) forwards`
+                  : `sessionProgress ${
+                      this.state.duration * (29 / 30)
+                    }s linear forwards`
+                : percentTimeLeft <= 0.66
+                ? `breakProgress ${
+                    this.state.duration * (29 / 30)
+                  }s cubic-bezier(0, ${1 - percentTimeLeft}, 0, ${
+                    1 - percentTimeLeft
+                  }) forwards`
+                : `breakProgress ${
+                    this.state.duration * (29 / 30)
+                  }s linear forwards`,
+          });
+        }, 10);
+
+        setTimeout(() => {
+          currentActivityCount = newActivityCount;
+        }, 20);
+      }
+    });
   }
 
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: COMPONENT DID MOUNT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: DECREMENT SESSION~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
   decrementSession() {
-    if (this.state.timerRunning === true) return;
+    if (this.state.timerRunning === true && this.state.onSession === true)
+      return;
 
     this.setState({
       sessionDefaultLength:
@@ -50,14 +93,39 @@ export default class PomodoroTimer extends Component {
           ? this.state.sessionDefaultLength - 1
           : this.state.sessionDefaultLength,
       timeLeft:
-        this.state.timeLeft > 60
-          ? this.state.timeLeft - 60
+        this.state.onSession === true
+          ? this.state.timeLeft > 60
+            ? this.state.timeLeft - 60
+            : this.state.timeLeft
           : this.state.timeLeft,
+      duration:
+        this.state.onSession === true
+          ? this.state.timeLeft > 60
+            ? this.state.duration - 60
+            : this.state.duration
+          : this.state.duration,
+      animation:
+        this.state.onSession === true
+          ? this.state.timeLeft > 60
+            ? this.state.timerRunning === true
+              ? `sessionProgress ${
+                  this.state.duration - 60
+                }s linear forwards running`
+              : `sessionProgress ${
+                  this.state.duration - 60
+                }s linear forwards paused`
+            : this.state.animation
+          : this.state.animation,
     });
   }
 
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: DECREMENT SESSION~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: INCREMENT SESSION~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
   incrementSession() {
-    if (this.state.timerRunning === true) return;
+    if (this.state.timerRunning === true && this.state.onSession === true)
+      return;
 
     this.setState({
       sessionDefaultLength:
@@ -65,33 +133,115 @@ export default class PomodoroTimer extends Component {
           ? this.state.sessionDefaultLength + 1
           : this.state.sessionDefaultLength,
       timeLeft:
-        this.state.timeLeft < 3600
-          ? this.state.timeLeft + 60
+        this.state.onSession === true
+          ? this.state.timeLeft < 3600
+            ? this.state.timeLeft + 60
+            : this.state.timeLeft
           : this.state.timeLeft,
+      duration:
+        this.state.onSession === true
+          ? this.state.timeLeft < 3600
+            ? this.state.duration + 60
+            : this.state.duration
+          : this.state.duration,
+      animation:
+        this.state.onSession === true
+          ? this.state.timeLeft < 3600
+            ? this.state.timerRunning === true
+              ? `sessionProgress ${
+                  this.state.duration + 60
+                }s linear forwards running`
+              : `sessionProgress ${
+                  this.state.duration + 60
+                }s linear forwards paused`
+            : this.state.animation
+          : this.state.animation,
     });
   }
 
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: INCREMENT SESSION~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: DECREMENT BREAK~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
   decrementBreak() {
-    if (this.state.timerRunning === true) return;
+    if (this.state.timerRunning === true && this.state.onSession === false)
+      return;
 
     this.setState({
       breakDefaultLength:
         this.state.breakDefaultLength > 1
           ? this.state.breakDefaultLength - 1
           : this.state.breakDefaultLength,
+      timeLeft:
+        this.state.onSession === false
+          ? this.state.timeLeft > 60
+            ? this.state.timeLeft - 60
+            : this.state.timeLeft
+          : this.state.timeLeft,
+      duration:
+        this.state.onSession === false
+          ? this.state.timeLeft > 60
+            ? this.state.duration - 60
+            : this.state.duration
+          : this.state.duration,
+      animation:
+        this.state.onSession === false
+          ? this.state.timeLeft > 60
+            ? this.state.timerRunning === true
+              ? `breakProgress ${
+                  this.state.duration - 60
+                }s linear forwards running`
+              : `breakProgress ${
+                  this.state.duration - 60
+                }s linear forwards paused`
+            : this.state.animation
+          : this.state.animation,
     });
   }
 
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: DECREMENT BREAK~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: INCREMENT BREAK~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
   incrementBreak() {
-    if (this.state.timerRunning === true) return;
+    if (this.state.timerRunning === true && this.state.onSession === false)
+      return;
 
     this.setState({
       breakDefaultLength:
         this.state.breakDefaultLength < 60
           ? this.state.breakDefaultLength + 1
           : this.state.breakDefaultLength,
+      timeLeft:
+        this.state.onSession === false
+          ? this.state.timeLeft < 3600
+            ? this.state.timeLeft + 60
+            : this.state.timeLeft
+          : this.state.timeLeft,
+      duration:
+        this.state.onSession === false
+          ? this.state.timeLeft < 3600
+            ? this.state.duration + 60
+            : this.state.duration
+          : this.state.duration,
+      animation:
+        this.state.onSession === false
+          ? this.state.timeLeft < 3600
+            ? this.state.timerRunning === true
+              ? `breakProgress ${
+                  this.state.duration + 60
+                }s linear forwards running`
+              : `breakProgress ${
+                  this.state.duration + 60
+                }s linear forwards paused`
+            : this.state.animation
+          : this.state.animation,
     });
   }
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: INCREMENT BREAK~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: START() METHOD~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
   start() {
     const beep = document.getElementById("beep");
@@ -101,60 +251,82 @@ export default class PomodoroTimer extends Component {
         this.state.timerRunning === true
           ? "fa-solid fa-play"
           : "fa-solid fa-pause",
+      initialized: true,
+
+      /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: INTERVAL~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
       interval:
-        this.state.timerRunning === true
-          ? clearInterval(this.state.interval)
-          : setInterval(() => {
-              if (this.state.timeLeft === 1) beep.play();
+        // IF
+        this.state.initialized === false
+          ? // START OF SET INTERVAL
+            setInterval(() => {
+              // START OF IF THE TIMER IS RUNNING
+              if (this.state.timerRunning === true) {
+                if (this.state.timeLeft === 1) beep.play();
 
-              this.setState({
-                onSession:
-                  this.state.timeLeft === 0
-                    ? this.state.onSession === true
-                      ? false
-                      : true
-                    : this.state.onSession,
-                timerLabel:
-                  this.state.timeLeft === 0
-                    ? this.state.onSession === true
-                      ? "Break"
-                      : "Session"
-                    : this.state.timerLabel,
-                timeLeft:
-                  this.state.timeLeft === 0
-                    ? this.state.onSession === true
-                      ? this.state.breakDefaultLength * 60
-                      : this.state.sessionDefaultLength * 60
-                    : this.state.timeLeft - 1,
-              });
-            }, 1000),
-      progress:
-        this.state.timerRunning === true
-          ? clearInterval(this.state.progress)
-          : setInterval(() => {
-              let initialProgress = this.state.initialProgress,
-                finalProgress =
-                  this.state.onSession === true
-                    ? this.state.sessionDefaultLength * 60 * 250
-                    : this.state.breakDefaultLength * 60 * 250;
+                if (this.state.timeLeft === 0) newActivityCount++;
+                if (
+                  this.state.timeLeft === 0 &&
+                  document.visibilityState === "visible"
+                )
+                  currentActivityCount++;
 
-              this.setState({
-                initialProgress:
-                  this.state.timeLeft === 0
-                    ? 0
-                    : this.state.initialProgress + 1,
-                progressBarBackground:
-                  this.state.timeLeft === 0
-                    ? "aqua"
-                    : `conic-gradient(aqua ${
-                        (initialProgress / finalProgress) * 360
-                      }deg, #455A64 ${
-                        (initialProgress / finalProgress) * 360
-                      }deg)`,
-              });
-            }, 1),
+                this.setState({
+                  onSession:
+                    this.state.timeLeft === 0
+                      ? this.state.onSession === true
+                        ? false
+                        : true
+                      : this.state.onSession,
+                  timerLabel:
+                    this.state.timeLeft === 0
+                      ? this.state.onSession === true
+                        ? "Break"
+                        : "Session"
+                      : this.state.timerLabel,
+                  timeLeft:
+                    this.state.timeLeft === 0
+                      ? this.state.onSession === true
+                        ? this.state.breakDefaultLength * 60
+                        : this.state.sessionDefaultLength * 60
+                      : this.state.timeLeft - 1,
+                  duration:
+                    this.state.timeLeft === 0
+                      ? this.state.onSession === true
+                        ? this.state.breakDefaultLength * 60
+                        : this.state.sessionDefaultLength * 60
+                      : this.state.duration,
+                  animation:
+                    this.state.timeLeft === 0
+                      ? this.state.onSession === true
+                        ? `breakProgress ${
+                            this.state.breakDefaultLength * 60
+                          }s linear forwards`
+                        : `sessionProgress ${
+                            this.state.sessionDefaultLength * 60
+                          }s linear forwards`
+                      : this.state.animation,
+                });
+              }
+              // END OF IF THE TIMER IS RUNNING
+            }, 1000)
+          : // END OF SET INTERVAL
+            // ELSE
+            this.state.interval,
+      /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: INTERVAL~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+      animation:
+        this.state.initialized === false
+          ? `sessionProgress ${this.state.duration}s linear forwards`
+          : this.state.animation,
+      animationPlayState:
+        this.state.timerRunning === true ? "paused" : "running",
+      glow: "glow 1s ease-out infinite alternate",
     });
   }
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: START() METHOD~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: RESET~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
   reset() {
     const beep = document.getElementById("beep");
@@ -162,8 +334,11 @@ export default class PomodoroTimer extends Component {
     beep.currentTime = 0;
     this.setState(initialState);
     clearInterval(this.state.interval);
-    clearInterval(this.state.progress);
   }
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: RESET~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~START: RENDER~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
   render() {
     return (
@@ -175,7 +350,9 @@ export default class PomodoroTimer extends Component {
           start={this.start}
           startIcon={this.state.startIconClass}
           reset={this.reset}
-          background={this.state.progressBarBackground}
+          animation={this.state.animation}
+          animationPlayState={this.state.animationPlayState}
+          glow={this.state.glow}
         />
         <div id="settings-grid">
           <Session
@@ -197,4 +374,6 @@ export default class PomodoroTimer extends Component {
       </div>
     );
   }
+
+  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~END: RENDER~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 }

@@ -11,7 +11,7 @@ export default class Session extends Component {
           <div
             id="session-decrement"
             className="button"
-            onPointerUp={this.props.decrementSession}>
+            onPointerDown={this.props.decrementSession}>
             <i className="fa-solid fa-minus"></i>
           </div>
           <div id="session-length" className="activity-length">
@@ -20,7 +20,7 @@ export default class Session extends Component {
           <div
             id="session-increment"
             className="button"
-            onPointerUp={this.props.incrementSession}>
+            onPointerDown={this.props.incrementSession}>
             <i className="fa-solid fa-plus"></i>
           </div>
         </div>

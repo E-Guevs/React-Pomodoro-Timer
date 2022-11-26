@@ -11,7 +11,7 @@ export default class Break extends Component {
           <div
             id="break-decrement"
             className="button"
-            onPointerUp={this.props.decrementBreak}>
+            onPointerDown={this.props.decrementBreak}>
             <i className="fa-solid fa-minus"></i>
           </div>
           <div id="break-length" className="activity-length">
@@ -20,7 +20,7 @@ export default class Break extends Component {
           <div
             id="break-increment"
             className="button"
-            onPointerUp={this.props.incrementBreak}>
+            onPointerDown={this.props.incrementBreak}>
             <i className="fa-solid fa-plus"></i>
           </div>
         </div>

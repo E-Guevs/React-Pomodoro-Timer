@@ -22,7 +22,7 @@ body {
   user-select: none;
 
   --color-cool-black: rgb(20, 25, 30);
-  --color-aqua-button: #13c7c7;
+  --color-aqua-button: #00c7c7;
 }
 
 body::before {
@@ -47,28 +47,78 @@ h1 {
   font-size: 1.5rem;
 }
 
-/* CIRCULAR PROGRESS BAR */
-#progress-bar {
+/* PROGRESS BAR CONTAINER */
+#progress-bar-container {
+  position: relative;
   display: flex;
   margin: auto;
   width: 9rem;
   aspect-ratio: 1;
   justify-content: center;
   align-items: center;
-  border-radius: 50%;
+}
+
+/* PROGRESS BAR SVG */
+svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* SVG ANIMATION */
+@keyframes glow {
+  100% {
+    filter: brightness(5) drop-shadow(0 0 0.5rem aqua);
+  }
+}
+
+/* PROGRESS BAR BORDER */
+.progress-border {
+  cx: 50%;
+  cy: 50%;
+  r: calc(50% - 0.875px);
+  fill: none;
+  stroke: #455a64;
+  stroke-width: 1.75px;
+}
+
+/* PROGRESS BAR */
+#progress-bar {
+  stroke: #00fafa;
+  stroke-dasharray: 310;
+  stroke-dashoffset: 310;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+/* PROGRESS BAR ANIMATION */
+@keyframes sessionProgress {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes breakProgress {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes throttledProgress {
+  100% {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* TIMER LABEL CONTAINER */
 #timer-label-container {
   display: flex;
   flex-direction: column;
-  width: calc(100% - 5.12px);
+  width: 100%;
   aspect-ratio: 1;
   font-family: "Play", sans-serif;
   justify-content: center;
   align-items: center;
   border-radius: 50%;
-  background: var(--color-cool-black);
 }
 
 /* CURRENT TIME LEFT */
@@ -139,7 +189,7 @@ h1 {
   }
 
   /* MEDIA (MIN-HEIGHT: 470px) PROGRESS BAR */
-  #progress-bar {
+  #progress-bar-container {
     width: 16rem;
   }
 

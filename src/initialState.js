@@ -1,15 +1,17 @@
 const initialState = {
+  initialized: false,
+  timerRunning: false,
   onSession: true,
   timerLabel: "Session",
+  timeLeft: 1500,
   startIconClass: "fa-solid fa-play",
   sessionDefaultLength: 25,
   breakDefaultLength: 5,
-  initialProgress: 0,
-  timeLeft: 1500,
-  timerRunning: false,
   interval: "",
-  progress: "",
-  progressBarBackground: "#455A64",
+  animation: "none",
+  duration: 1500,
+  animationPlayState: "paused",
+  glow: "none",
 };
 
 export { initialState };
