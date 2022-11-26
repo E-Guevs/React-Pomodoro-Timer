@@ -8,7 +8,7 @@ export default function addButtonEffects(className) {
       button.style.transform = "scale(0.95)";
     });
 
-    button.addEventListener("pointerup", () => {
+    document.addEventListener("pointerup", () => {
       button.style.color = "white";
       button.style.background = "#00c7c7";
       button.style.transform = "scale(1)";
