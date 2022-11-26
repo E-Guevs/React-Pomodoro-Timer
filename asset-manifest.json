@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/react-pomodoro-timer/static/css/main.a90567e4.css",
-    "main.js": "/react-pomodoro-timer/static/js/main.73c1a80d.js",
+    "main.js": "/react-pomodoro-timer/static/js/main.4af532e2.js",
     "static/media/Electric-Alarm-Beep.mp3": "/react-pomodoro-timer/static/media/Electric-Alarm-Beep.2903f8641343e3d17cf5.mp3",
     "index.html": "/react-pomodoro-timer/index.html",
     "main.a90567e4.css.map": "/react-pomodoro-timer/static/css/main.a90567e4.css.map",
-    "main.73c1a80d.js.map": "/react-pomodoro-timer/static/js/main.73c1a80d.js.map"
+    "main.4af532e2.js.map": "/react-pomodoro-timer/static/js/main.4af532e2.js.map"
   },
   "entrypoints": [
     "static/css/main.a90567e4.css",
-    "static/js/main.73c1a80d.js"
+    "static/js/main.4af532e2.js"
   ]
 }
